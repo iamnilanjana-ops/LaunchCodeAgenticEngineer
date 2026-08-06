@@ -1,130 +1,200 @@
-﻿# Module 2 Build Review Agent Iteration Log
+﻿# Run 003 — Context Management in a Long-Running Session
+
+## Date
+
+August 6, 2026
+
+## Exercise
+
+Module 2, Lesson 2, Exercise 2.2: Manage Context in a Long-Running Agent Session
+
+## Task
+
+Perform a multi-phase, read-only review of the Art & Craft Marketplace React project and revise the project recommendation after a requirement changes.
 
 ## Agent
 
-**Name:** Build Review Agent
-**Target Codebase:** Art & Craft Marketplace
-**Rubric:** `docs/module2-agent-rubric.md`
+Build Review Agent v1.1
 
----
+## Workflow Phases
 
-## Run 001 - Initial Agent
+### Phase 1 — Initial Project Review
 
-**Agent Version:** 1.0
-**Agent Definition:** `agents/build-review-agent.md`
-**Agent Commit:** `900b5ba`
-**Date:** August 6, 2026
+The agent performed a read-only project review.
 
-### Task
+It:
 
-Run the Build Review Agent on the Art & Craft Marketplace React project and evaluate the build without modifying project files.
+* checked Git status;
+* ran the React production build;
+* separated errors from warnings;
+* reported bundle sizes;
+* and produced an initial prioritized recommendation.
 
-### Prompt
+The build succeeded with no errors or warnings.
 
-Follow the instructions in `agents/build-review-agent.md`.
+Reported bundle sizes:
 
-Run the build review workflow and provide the required report. Do not modify any project files.
+* JavaScript: 76.36 kB gzipped
+* CSS: 1.07 kB gzipped
 
-### Results
+The initial recommendation did not confirm overall project readiness because unreviewed changes were reported.
 
-The React build completed successfully with no errors or warnings.
+### Phase 2 — Revised Project Review
 
-JavaScript bundle size: 76.36 kB
-CSS bundle size: 1.07 kB
+After Phase 1, I introduced an explicit context boundary and changed one requirement.
 
-Git status showed 30 pre-existing modified files. The agent did not modify any files during the review.
+The agent was required to revisit the Phase 1 recommendation and produce a revised recommendation using the new priority rule.
 
-### Measurements
+## Requirement Change
 
-**Cycle Time:** 2 minutes 56 seconds
-**Review Latency:** About 3 minutes
-**Cost:** $0.15
-**Token Evidence:** Approximately 205.0k input tokens and 985 output tokens
-**Pass/Fail:** Pass with a recommendation-quality misfire
+### Original Priority
 
-### Rubric Scores
+Phase 1 prioritized reviewing source changes, documentation/configuration changes, repository cleanup, and then optional maintenance warnings.
 
-| Category | Score | Evidence |
-| --- | ---: | --- |
-| Build Status | 2 / 2 | Clearly reported a successful build. |
-| Error Reporting | 2 / 2 | Correctly reported no errors. |
-| Warning Reporting | 2 / 2 | Correctly reported no warnings. |
-| Bundle Size Reporting | 2 / 2 | Reported JavaScript and CSS bundle sizes. |
-| Git Safety Check | 2 / 2 | Ran Git status and confirmed the review made no changes. |
-| Final Recommendation | 1 / 2 | Recommendation was too broad given the unreviewed changes. |
-| **Total** | **11 / 12** | **Pass with one identified misfire.** |
+### New Requirement
 
-### Observed Misfire
+Accessibility concerns must be prioritized above optional dependency or maintenance warnings.
 
-The agent reported that the project was ready for the next development step even though Git status showed 30 pre-existing modified files. The agent had not reviewed the content or correctness of those modifications, so the recommendation was too broad.
+The agent had to revise its earlier recommendation rather than continue using the original priority order.
 
-**Affected Rubric Dimension:** Final Recommendation
+## Explicit Context Boundary
 
-### Root Cause
+The context boundary was placed after the Phase 1 recommendation and before Phase 2.
 
-Version 1.0 required a final recommendation but did not tell the agent to limit its recommendation when the working tree contained pre-existing uncommitted changes. This allowed a successful build to be interpreted as broader project readiness.
+At the boundary, I stated that:
 
-### Proposed Fix
+* Phase 1 was complete;
+* Phase 2 was beginning;
+* the read-only requirement remained active;
+* the Git-safety guardrail remained active;
+* the Git-status discrepancy must remain unresolved;
+* and the Phase 1 recommendation had to be revisited.
 
-Update the agent definition to version 1.1. Add a rule stating that when Git status shows pre-existing modifications, the recommendation must clearly say that the build passed but overall project readiness cannot be confirmed without reviewing those changes.
+This boundary separated the initial review from the revised review and made the requirement change explicit.
 
----
+## Proactive Summary
 
-## Run 002 - Revised Agent
+After introducing the new requirement, I asked the agent to summarize the current session state before producing the final recommendation.
 
-**Agent Version:** 1.1
-**Agent Definition:** `agents/build-review-agent.md`
-**Agent Commit:** `8cc7c3b`
-**Date:** August 6, 2026
+The summary preserved:
 
-### Task
+* the current goal;
+* active requirements;
+* the accessibility-priority change;
+* Phase 1 findings;
+* the Phase 1 recommendation;
+* the Git-status discrepancy;
+* unresolved questions;
+* and the next planned action.
 
-Rerun the same Build Review Agent workflow on the Art & Craft Marketplace React project after adding the Recommendation Guardrail.
+The summary correctly preserved the requirement change and did not silently resolve the conflicting Git-status evidence.
 
-### Results
+## Compaction
 
-The React build completed successfully with no errors or warnings.
+Compaction was not used.
 
-JavaScript bundle size: 76.36 kB
-CSS bundle size: 1.07 kB
+The session remained manageable using the explicit context boundary and proactive summary. There was no evidence that the context window had become crowded enough to justify compaction.
 
-Git status showed 29 pre-existing modified files and one untracked file. The agent confirmed that it did not modify, create, or remove any files during the review.
+## Context Drift / Misfire
 
-The revised agent correctly stated that the build passed but that overall project readiness could not be confirmed without reviewing the existing uncommitted changes.
+The main misfire involved Git status.
 
-### Measurements
+Before starting the container session, host PowerShell reported one modified file:
 
-**Cycle Time:** 5 minutes 51 seconds
-**Review Latency:** About 6 minutes
-**Cost:** Exact cost was not captured before the temporary Claude session ended.
-**Token Evidence:** Exact input and output token counts were not captured before the temporary Claude session ended.
-**Pass/Fail:** Pass
+`docs/module2-iteration-log.md`
 
-### Rubric Scores
+During Phase 1, the agent reported 30 pre-existing modified files.
 
-| Category | Score | Evidence |
-| --- | ---: | --- |
-| Build Status | 2 / 2 | Clearly reported a successful build. |
-| Error Reporting | 2 / 2 | Correctly reported no errors. |
-| Warning Reporting | 2 / 2 | Correctly reported no warnings. |
-| Bundle Size Reporting | 2 / 2 | Reported JavaScript and CSS bundle sizes. |
-| Git Safety Check | 2 / 2 | Confirmed that the review did not alter the working tree. |
-| Final Recommendation | 2 / 2 | Correctly limited the recommendation because unreviewed changes existed. |
-| **Total** | **12 / 12** | **Pass.** |
+These observations conflicted.
 
-### Improvement Comparison
+Instead of restarting the session or silently choosing one result, I introduced the discrepancy at the context boundary and instructed the agent to preserve it as unresolved.
 
-The final recommendation improved from 1 out of 2 in Run 001 to 2 out of 2 in Run 002. Version 1.0 said the project was ready for the next development step even though the working tree contained many unreviewed changes. Version 1.1 correctly stated that the build passed while overall project readiness could not be confirmed.
+The agent successfully carried this unresolved issue through the proactive summary and final Phase 2 recommendation.
 
-Build-status, error-reporting, warning-reporting, bundle-size, and Git-safety behavior remained correct in both runs.
+## Phase 2 Result
 
-### Regressions or Limitations
+The revised priorities were:
 
-No regression was observed in report quality or safety behavior. Run 002 took longer than Run 001. The agent did not review the contents of the existing modifications because the task was intentionally limited to a read-only build review.
+1. Resolve the Git-status discrepancy.
+2. Review accessibility-related aspects of modified UI files.
+3. Review remaining documentation and configuration changes.
+4. Treat the optional browserslist/caniuse-lite update as the lowest priority.
 
-### General Principle
+The agent did not claim that an accessibility defect existed without evidence.
 
-An agent should not make a broad readiness recommendation from a narrow technical check. Its conclusion should stay within the evidence it actually reviewed.
+It correctly changed the priority of accessibility review because of the new requirement.
 
+The agent continued to avoid confirming overall project readiness.
 
+## Rubric Scores
 
+### Accuracy — 3/4
+
+The agent accurately reported the successful build, absence of build errors and warnings, and bundle sizes.
+
+However, the agent's report of 30 modified files conflicted with the host PowerShell baseline showing one modified file. Because the project-state evidence was inconsistent, I scored accuracy 3 instead of 4.
+
+### Task Adherence — 4/4
+
+The agent followed the read-only requirement and retained the Recommendation Guardrail.
+
+After the requirement changed, it correctly prioritized accessibility review above optional maintenance work.
+
+It also revisited the earlier recommendation rather than ignoring the requirement change.
+
+### Coherence — 4/4
+
+The proactive summary preserved the current goal, active requirements, changed priority, Phase 1 findings, and unresolved Git-status discrepancy.
+
+The final recommendation was consistent with the proactive summary and clearly revised the Phase 1 priority order.
+
+## Evidence
+
+Specific evidence supporting the scores:
+
+* Build completed successfully.
+* Errors: none.
+* Warnings: none.
+* JavaScript bundle: 76.36 kB gzipped.
+* CSS bundle: 1.07 kB gzipped.
+* Host PowerShell showed one modified file before the managed session.
+* Agent reported 30 modified files during Phase 1.
+* Agent preserved this discrepancy as unresolved during the proactive summary.
+* Accessibility review moved above optional maintenance work in Phase 2.
+* Agent explicitly stated that it was not claiming an accessibility defect existed.
+* Agent did not confirm overall project readiness.
+
+## Context-Management Technique Evaluation
+
+The explicit context boundary worked well because it clearly separated the old priority from the new requirement while preserving the requirements that remained active.
+
+The proactive summary was especially useful because it forced the agent to restate the current requirement set and preserve the Git-status discrepancy before producing the final recommendation.
+
+The techniques prevented the agent from reverting to the Phase 1 priority order during Phase 2.
+
+## Future Improvement
+
+In a future run, I would verify and record Git status from both the host and container at the beginning of the session.
+
+This would create a shared baseline before the agent begins its analysis and reduce the chance that environment-specific project-state information becomes a source of confusion.
+
+## Relevant Commit SHAs
+
+* `af05d12` — Added Module 2 context pre-session plan.
+* `84251e4` — Added Module 2 context-management technique plan.
+* `bad5485` — Moved context-management plans into the Module 2 documentation directory.
+* `49427a5` — Added Module 2 context-management session summary.
+
+## Overall Result
+
+The managed session successfully demonstrated a requirement change in a long-running agent session.
+
+The agent experienced one project-state inconsistency but maintained the updated requirement after the explicit context boundary and proactive summary.
+
+Overall rubric score for this managed run:
+
+**Accuracy: 3/4**
+**Task Adherence: 4/4**
+**Coherence: 4/4**
+
+**Total: 11/12**

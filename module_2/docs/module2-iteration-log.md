@@ -198,3 +198,20 @@ Overall rubric score for this managed run:
 **Coherence: 4/4**
 
 **Total: 11/12**
+## Persistent Memory Verification
+
+### Run 001
+
+* **Date:** August 7, 2026
+* **Agent:** Claude Code
+* **Workflow:** Build and verify persistent memory
+* **Memory system state:** Persistent memory system created and committed. Fresh-session verification not yet completed.
+* **Commit SHA:** `4404a1d`
+* **Project Memory:** `.memory/project/decisions/decision-001.md`
+* **Knowledge File:** `.memory/knowledge/coding-standards.md`
+* **Reference Index:** `.memory/reference/MEMORY_INDEX.md`
+* **Knowledge protection:** Read-only permission verified inside the container using a non-root user. The write attempt returned `Permission denied`.
+- **Startup-memory check:** PASS. In a genuinely fresh session, Claude Code found Decision 001, the coding standards Knowledge File, and the reference index. It correctly distinguished changing Project Memory from stable Knowledge, identified the write policies, and did not modify any files.
+- **Task-resumption check:** PASS. Claude Code correctly identified the active cross-session decision, followed the stored project standards, recognized that manually pasted notes and full transcript storage were rejected approaches, and proposed an appropriate next action without modifying files.
+- **Observation:** The fresh-session test also identified a possible continuity-design gap between the older `docs/session-notes.md` instruction in `CLAUDE.md` and the newer structured `.memory/project/` system.
+- **Verification result:** PASS — both required fresh-session checks passed.

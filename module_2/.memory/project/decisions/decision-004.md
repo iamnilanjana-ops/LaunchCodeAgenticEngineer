@@ -1,5 +1,7 @@
 # Decision 004: Store Evolving Decisions in Project Memory
 
+**Review by:** 2026-11-05
+
 - **Date:** 2026-08-07
 - **Status:** Active
 - **Scope:** Project

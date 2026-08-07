@@ -1,5 +1,7 @@
 # Decision 003: Keep Stable Knowledge Read-Only
 
+**Review by:** 2026-11-05
+
 - **Date:** 2026-08-07
 - **Status:** Active
 - **Scope:** Project

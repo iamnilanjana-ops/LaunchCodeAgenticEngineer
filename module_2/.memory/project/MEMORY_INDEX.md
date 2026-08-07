@@ -30,6 +30,66 @@ Claude Code should use this index to locate important project memory that may no
 
 
 
+\### Decision 002 - Check Existing Memory Before Adding New Entries
+
+
+
+\*\*File:\*\* `decisions/decision-002.md`
+
+
+
+\*\*Use when:\*\* Before creating a new persistent project-memory entry.
+
+
+
+\*\*Summary:\*\* Check the existing memory index and relevant decisions before creating a new memory entry, to avoid duplicates or conflicts.
+
+
+
+\*\*Status:\*\* Active
+
+
+
+\### Decision 003 - Keep Stable Knowledge Read-Only
+
+
+
+\*\*File:\*\* `decisions/decision-003.md`
+
+
+
+\*\*Use when:\*\* Before reading or considering any change to files in `.memory/knowledge/`.
+
+
+
+\*\*Summary:\*\* Files in `.memory/knowledge/` are human-maintained and read-only for the agent; content and permissions must not be changed without explicit human instruction.
+
+
+
+\*\*Status:\*\* Active
+
+
+
+\### Decision 004 - Store Evolving Decisions in Project Memory
+
+
+
+\*\*File:\*\* `decisions/decision-004.md`
+
+
+
+\*\*Use when:\*\* Deciding where to record project context or decisions that cannot be inferred from the repository.
+
+
+
+\*\*Summary:\*\* Evolving project decisions belong in `.memory/project/decisions/`; stable reusable guidance stays in the knowledge layer, and reference material stays in the reference layer.
+
+
+
+\*\*Status:\*\* Active
+
+
+
 \## Usage
 
 

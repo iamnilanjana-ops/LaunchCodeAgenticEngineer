@@ -90,6 +90,12 @@ Claude Code should use this index to locate important project memory that may no
 
 
 
+\## Canonical Index
+
+This file is the single canonical Project Memory index; CLAUDE.md directs fresh sessions to read it at startup. Do not create another `MEMORY_INDEX.md` anywhere under `.memory/project/` (including inside `decisions/`) — a second index list would duplicate this one and could drift out of sync. If a subfolder ever needs a quick-reference list, link back to this file instead of copying its contents.
+
+
+
 \## Usage
 
 

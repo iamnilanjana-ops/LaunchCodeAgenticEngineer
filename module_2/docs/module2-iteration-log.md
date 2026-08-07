@@ -215,3 +215,47 @@ Overall rubric score for this managed run:
 - **Task-resumption check:** PASS. Claude Code correctly identified the active cross-session decision, followed the stored project standards, recognized that manually pasted notes and full transcript storage were rejected approaches, and proposed an appropriate next action without modifying files.
 - **Observation:** The fresh-session test also identified a possible continuity-design gap between the older `docs/session-notes.md` instruction in `CLAUDE.md` and the newer structured `.memory/project/` system.
 - **Verification result:** PASS — both required fresh-session checks passed.
+## Run 003 - Stale Memory Failure Test
+
+- **Agent name/version:** Claude Code
+- **Failure mode tested:** Stale memory
+- **Task used:** Review the current project memory, summarize the project state, and suggest what to work on next.
+- **Initial memory state commit:** `f0bf981`
+
+### Initial Observation
+
+The agent correctly recognized that `decision-002.md` had an expired review date and conflicted with the current memory rules. It did not apply the stale decision as valid.
+
+Verbatim excerpt:
+
+> "I found one issue in decision-002: its Review by date is 2026-07-01, which has passed."
+>
+> "I'm surfacing that conflict now rather than acting on decision-002 as written."
+
+### Remediation
+
+The stale test entry was restored to the correct decision and its review date was updated.
+
+- Restored decision commit: `c459dfb`
+
+A stronger stale-memory policy was then added to `CLAUDE.md`. The new policy requires the agent to check the `Review by` date before acting, report expired entries, ask for human confirmation, and wait before using them.
+
+- Policy remediation commit: `dc9f3b4`
+
+### Rerun Result
+
+On the verification run, the agent used the corrected `decision-002` and also noticed that other decision files did not yet have review dates.
+
+Verbatim excerpt:
+
+> "Always check the index before adding a new entry, to avoid duplicates/conflicts (decision-002)."
+>
+> "Suggested next step: add a Review by date to decision-003 and decision-004 for consistency with 001/002, so the stale-memory check applies uniformly across all four entries."
+
+### Pass/Fail
+
+**Pass:** The agent did not use stale information as current, correctly followed the restored decision, and applied the review-date policy during the verification run.
+
+### Remaining Limitation
+
+The stale-memory policy is an instruction-based soft guard. It still depends on the agent following `CLAUDE.md`. A production system could add a deterministic validation script or hook that checks required review-date metadata automatically.

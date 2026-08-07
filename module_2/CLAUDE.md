@@ -117,3 +117,18 @@ At the start of every fresh session:
 * If a Project Memory entry conflicts with the current repository or appears outdated, report the conflict before relying on it.
 * Project Memory entries should be reviewed according to the review trigger recorded in the entry.
 * Knowledge Files should only be changed after human review.
+
+### Stale Memory Policy
+
+Before acting on any Project Memory entry, check its `Review by` date.
+
+If the review date has passed:
+
+1. Do not act on that memory entry yet.
+2. Clearly report that the entry is expired.
+3. Ask the human to confirm whether the entry is still accurate.
+4. Wait for confirmation before using the entry.
+
+If an expired entry also conflicts with the current repository state, treat the repository as the stronger evidence and report the conflict.
+
+This policy applies to entries in `.memory/project/`.

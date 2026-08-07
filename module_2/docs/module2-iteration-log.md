@@ -259,3 +259,39 @@ Verbatim excerpt:
 ### Remaining Limitation
 
 The stale-memory policy is an instruction-based soft guard. It still depends on the agent following `CLAUDE.md`. A production system could add a deterministic validation script or hook that checks required review-date metadata automatically.
+## Module 2 Lab — Track 1: Strengthen Project Memory
+
+### Run 1 — Memory Consistency Review
+
+- **Date:** August 7, 2026
+- **Track:** Track 1 — Work with Built-In Agents and Strengthen Project Memory
+- **Agent:** Claude Code
+- **Task:** Review the existing persistent-memory system for consistency, freshness, and maintainability gaps.
+- **Observation:** Claude found that decision-003.md and decision-004.md were missing the `Review by` metadata required by the stale-memory policy. It also found that the canonical Project Memory index listed only Decision 001, even though Decisions 002–004 were active.
+- **Revision:** Added `Review by: 2026-11-05` to Decisions 003 and 004 and updated `.memory/project/MEMORY_INDEX.md` so all four active decisions were discoverable.
+- **Commit:** `f90a7e1`
+- **Result:** The memory system became more consistent with the stale-memory policy and more discoverable for fresh sessions.
+
+### Run 2 — Fresh-Session Verification
+
+- **Date:** August 7, 2026
+- **Agent:** Claude Code
+- **Session type:** Fresh session started without `--continue` or `--resume`.
+- **Task:** Follow `CLAUDE.md` startup instructions and report all active Project Memory decisions, their review dates, stale-memory behavior, and writable/read-only memory layers.
+- **Observation:** Claude successfully discovered all four active decisions and correctly reported `Review by: 2026-11-05` for each. It correctly explained the stale-memory policy and memory-layer permissions.
+- **New issue discovered:** Claude found two Project Memory index files: `.memory/project/MEMORY_INDEX.md` and `.memory/project/decisions/MEMORY_INDEX.md`. Because both represented the same decisions, they could drift out of sync.
+- **Revision:** Removed the unused duplicate `decisions/MEMORY_INDEX.md` and added a Canonical Index rule to `.memory/project/MEMORY_INDEX.md`.
+- **Commit:** `9de1f1d`
+- **Result:** PASS. Fresh-session memory retrieval worked, but the run exposed a maintainability risk that led to another improvement.
+
+### Run 3 — Final Fresh-Session Verification
+
+- **Date:** August 7, 2026
+- **Agent:** Claude Code
+- **Session type:** Fresh session started without `--continue` or `--resume`.
+- **Task:** Verify the memory system after consolidating the Project Memory index.
+- **Observation:** Claude confirmed that `.memory/project/MEMORY_INDEX.md` is the single canonical Project Memory index and that no duplicate Project Memory index remains.
+- **Verification:** Claude discovered all four active decisions from the canonical startup path and reported `Review by: 2026-11-05` for each.
+- **Result:** PASS. The startup process was complete and internally consistent, with no active problem preventing a future fresh session from using persistent memory correctly.
+- **Remaining limitation:** Claude identified a future cleanup opportunity because `docs/session-notes.md` and structured Project Memory both provide continuity mechanisms. It also noted that read-only knowledge protection currently relies partly on instructions and that some memory files have formatting inconsistencies.
+- **Next improvement:** Clarify the role of `docs/session-notes.md` versus structured Project Memory so future sessions have one clear continuity workflow.

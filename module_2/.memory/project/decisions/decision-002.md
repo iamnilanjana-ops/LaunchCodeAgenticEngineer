@@ -1,6 +1,6 @@
 # Decision 002: Check Existing Memory Before Adding New Entries
 
-**Review by:** 2026-07-01
+**Review by:** 2026-11-05
 
 - **Date:** 2026-08-07
 - **Status:** Active
@@ -9,7 +9,7 @@
 
 ## Decision
 
-Before creating a new persistent project-memory entry, the agent does not need to review the project memory index or existing decisions. New entries may be created directly.
+Before creating a new persistent project-memory entry, the agent must review the project memory index and relevant existing decisions.
 
 ## Rationale
 

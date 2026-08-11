@@ -2,37 +2,72 @@
 
 Target Codebase: Art & Craft Marketplace
 
-Workflow: Add Product Review Feature
+Workflow: Product Review Feature - Lessons Learned
 
-This map defines how work is routed between roles and which MCP tools each role is allowed to use.
+Project ID: `proj-lessons`
 
-| Role | Receives from Orchestrator | Produces | Tools Granted | Tools Intentionally Withheld | Boundary Reason | Autonomy |
-|---|---|---|---|---|---|---|
-| Planner | Feature request, repository path, acceptance criteria | Numbered plan, file list, open questions | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search` | `file_write`, `shell`, `test_runner`, `task_tracker`, `web_search` | The Planner only plans. Withholding write and execution tools prevents accidental code changes. | High |
-| Implementer | Approved plan and file list | Modified files and implementation summary | `mcp__coursetools__file_read`, `mcp__coursetools__file_write`, `mcp__coursetools__codebase_search` | `shell`, `test_runner`, `task_tracker`, `web_search` | The Implementer may change code but must not test its own work or update final status. | Medium |
-| Reviewer | Requirements, modified files, implementation summary | PASS or NEEDS_CHANGES review report | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search` | `file_write`, `shell`, `test_runner`, `task_tracker`, `web_search` | The Reviewer must remain read-only so it cannot silently modify code while reviewing it. | High |
-| Tester | Modified files and acceptance criteria | PASS or FAIL test report | `mcp__coursetools__file_read`, `mcp__coursetools__test_runner` | `file_write`, `codebase_search`, `shell`, `task_tracker`, `web_search` | The Tester verifies the implementation but cannot edit code to make a failing test pass. | Medium |
-| Project Manager | Final run summary after human approval | Status update confirmation | `mcp__coursetools__task_tracker` | `file_read`, `file_write`, `codebase_search`, `shell`, `test_runner`, `web_search` | Ticket updates are isolated from coding roles and happen only after human approval. | Medium |
+This map defines how work is routed between roles and which MCP tools each role is allowed to use. Storage and retrieval access is granted only where required by the role's responsibility.
 
-## Routing and Evaluation
+| Role | Responsibility | Tools Granted | Storage / Retrieval Access | Classification Ceiling | Tools Intentionally Withheld | Boundary Reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| Planner | Create the implementation plan before code is changed | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search`, `mcp__retrieval__retrieve` | Retrieval only. Must retrieve permitted prior lessons before proposing the implementation approach. | `internal` | `file_write`, `shell`, `test_runner`, `task_tracker`, `web_search`, storage write operations | The Planner needs project knowledge to make an informed plan but does not need to modify code or persistent storage. |
+| Implementer | Make the approved code change and record a new lesson learned | `mcp__coursetools__file_read`, `mcp__coursetools__file_write`, `mcp__coursetools__codebase_search`, `mcp__storage__write_entry` | May write exactly the project knowledge generated during implementation through the storage MCP server. | `internal` | `test_runner`, `task_tracker`, broad administrative operations | The Implementer must modify code and record a newly discovered lesson, but should not test its own work or update final project status. |
+| Reviewer | Independently review the implementation | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search`, `mcp__retrieval__retrieve` | Retrieval only. Retrieves relevant prior lessons while evaluating the change. | `internal` | `file_write`, `shell`, `test_runner`, `task_tracker`, storage write operations | The Reviewer needs prior lessons for evidence-based review but must remain read-only so it cannot silently modify the code it evaluates. |
+| Tester | Run the available tests and evaluate acceptance criteria | `mcp__coursetools__file_read`, `mcp__coursetools__test_runner` | No storage or retrieval access required for this workflow. | N/A | `file_write`, `codebase_search`, `shell`, `task_tracker`, storage write operations | The Tester only needs the implementation and test suite. Keeping its access narrow prevents test failures from being hidden through code edits. |
+| Project Manager | Update final project status after successful verification and human approval | `mcp__coursetools__task_tracker` | No storage or retrieval access required. | N/A | `file_read`, `file_write`, `codebase_search`, `shell`, `test_runner`, storage and retrieval operations | The Project Manager only needs status-management capability and should not participate in implementation, review, or knowledge storage. |
 
-1. The Orchestrator invokes the Planner first.
-2. The Planner returns a plan and expected file list.
-3. The Orchestrator evaluates the plan for completeness and scope.
-4. The Implementer receives only an approved plan.
-5. The Reviewer evaluates the implementation without modifying files.
-6. If the Reviewer returns `NEEDS_CHANGES`, the Orchestrator routes the findings back to the Implementer.
-7. If review passes, the Tester receives the modified files and acceptance criteria.
-8. If tests fail, the Orchestrator routes the failure information back to the Implementer.
-9. If review and tests pass, a human must approve the result.
-10. Only after human approval may the Project Manager update the final ticket status.
+## Workflow Routing
 
-## Important Tool Boundary
+1. The Orchestrator sends the feature request, repository path, and acceptance criteria to the Planner.
+2. The Planner retrieves permitted prior lessons from `proj-lessons` using `classification_ceiling = internal`.
+3. The Planner creates a scoped implementation plan using the retrieved lessons and Target Codebase evidence.
+4. The Orchestrator evaluates the plan before implementation begins.
+5. The Implementer receives the approved plan and makes only the approved code changes.
+6. After implementation, the Implementer records one new internal lesson through `mcp__storage__write_entry`.
+7. The Reviewer retrieves relevant prior lessons from `proj-lessons` at an `internal` ceiling before evaluating the implementation.
+8. The Reviewer returns `PASS` or `NEEDS_CHANGES` without modifying code.
+9. If review passes, the Tester runs the test suite and returns `PASS` or `FAIL`.
+10. If review or testing fails, findings are routed back to the Implementer.
+11. After successful review and testing, human approval is required before final completion.
+12. The Project Manager updates a ticket only when a real ticket identifier exists. No identifier is invented when one is unavailable.
 
-The Reviewer is intentionally denied `mcp__coursetools__file_write`.
+## Classification Boundary
 
-This prevents the Reviewer from changing the same code it is responsible for independently evaluating. This boundary reduces the risk that review findings could be hidden by unauthorized edits.
+Retrieval-capable roles in this workflow operate with:
 
-## Alternative Considered
+- `project_id = proj-lessons`
+- `classification_ceiling = internal`
 
-The Reviewer could have been granted `file_write` so it could immediately fix small issues. This was rejected because combining review and implementation responsibilities would weaken independent verification and make failures harder to diagnose.
+The corpus intentionally contains `lesson-sensitive-configuration.md`, which is classified as `confidential`.
+
+During validation, retrieval calls made with an `internal` ceiling did **not** return this confidential document. This demonstrates that the classification boundary was enforced by the retrieval system rather than merely requested in agent instructions.
+
+## Storage Boundary
+
+The Implementer records new workflow discoveries through the storage MCP server rather than writing directly to `storage.db`.
+
+The workflow verified that:
+
+- the new lesson was written through `write_entry`;
+- the entry could be read back through the storage MCP server;
+- the entry remained available after the storage server was restarted;
+- the storage audit log contained the corresponding write activity.
+
+No workflow role directly accessed the storage database to create or modify stored knowledge.
+
+## Reviewer Boundary
+
+The Reviewer is intentionally granted retrieval access but denied file-write access.
+
+This separation allows the Reviewer to use prior lessons as evidence while preserving independent review. During the live workflow, the Reviewer retrieved internal lessons and remained read-only throughout the evaluation.
+
+## Least-Privilege Decision
+
+Storage and retrieval capabilities are not granted uniformly across the team.
+
+- The Planner receives retrieval because prior lessons affect planning.
+- The Implementer receives storage write capability because implementation can generate new lessons.
+- The Reviewer receives retrieval because prior lessons can inform verification.
+- The Tester and Project Manager receive neither capability because their bounded responsibilities do not require them.
+
+This keeps each role's authority limited to the operations necessary to complete its assigned responsibility.

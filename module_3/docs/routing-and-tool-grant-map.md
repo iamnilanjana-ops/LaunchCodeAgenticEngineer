@@ -1,47 +1,38 @@
 # Routing and Tool Grant Map
 
-Project: `proj-csv`
+Target Codebase: Art & Craft Marketplace
 
-This map is the design decision of record. Agent definitions in `.agents/` implement this table. When a definition and this map disagree, update the definition to match the map.
+Workflow: Add Product Review Feature
 
-## Storage operation grants
+This map defines how work is routed between roles and which MCP tools each role is allowed to use.
 
-All storage operations are on the `storage` MCP server and are named `mcp__storage__<operation>` in agent definitions.
+| Role | Receives from Orchestrator | Produces | Tools Granted | Tools Intentionally Withheld | Boundary Reason | Autonomy |
+|---|---|---|---|---|---|---|
+| Planner | Feature request, repository path, acceptance criteria | Numbered plan, file list, open questions | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search` | `file_write`, `shell`, `test_runner`, `task_tracker`, `web_search` | The Planner only plans. Withholding write and execution tools prevents accidental code changes. | High |
+| Implementer | Approved plan and file list | Modified files and implementation summary | `mcp__coursetools__file_read`, `mcp__coursetools__file_write`, `mcp__coursetools__codebase_search` | `shell`, `test_runner`, `task_tracker`, `web_search` | The Implementer may change code but must not test its own work or update final status. | Medium |
+| Reviewer | Requirements, modified files, implementation summary | PASS or NEEDS_CHANGES review report | `mcp__coursetools__file_read`, `mcp__coursetools__codebase_search` | `file_write`, `shell`, `test_runner`, `task_tracker`, `web_search` | The Reviewer must remain read-only so it cannot silently modify code while reviewing it. | High |
+| Tester | Modified files and acceptance criteria | PASS or FAIL test report | `mcp__coursetools__file_read`, `mcp__coursetools__test_runner` | `file_write`, `codebase_search`, `shell`, `task_tracker`, `web_search` | The Tester verifies the implementation but cannot edit code to make a failing test pass. | Medium |
+| Project Manager | Final run summary after human approval | Status update confirmation | `mcp__coursetools__task_tracker` | `file_read`, `file_write`, `codebase_search`, `shell`, `test_runner`, `web_search` | Ticket updates are isolated from coding roles and happen only after human approval. | Medium |
 
-| Role | Storage operations granted | Storage operations denied (reason) | Classification it may write |
-| :--- | :--- | :--- | :--- |
-| `planner` | `read_entry`, `list_entries`, `write_entry` | `update_entry`, `delete_entry` — plans are new entries; the Planner does not revise or remove records. | `public`, `internal` |
-| `implementer` | `read_entry`, `list_entries`, `write_entry`, `update_entry` | `delete_entry` — may revise its own notes but must never remove records. | `public`, `internal` |
-| `reviewer` | `read_entry`, `list_entries`, `write_entry` | `update_entry`, `delete_entry` — read-only toward others' work; writes only its own review. | `public`, `internal` |
-| `tester` | `read_entry`, `list_entries`, `write_entry` | `update_entry`, `delete_entry` — records a result; does not alter or remove records. | `public`, `internal` |
-| `project-manager` | `read_entry`, `list_entries` | `write_entry`, `update_entry`, `delete_entry` — owns ticket state, not persistent project memory. | none; read-only |
+## Routing and Evaluation
 
-Cross-role check:
+1. The Orchestrator invokes the Planner first.
+2. The Planner returns a plan and expected file list.
+3. The Orchestrator evaluates the plan for completeness and scope.
+4. The Implementer receives only an approved plan.
+5. The Reviewer evaluates the implementation without modifying files.
+6. If the Reviewer returns `NEEDS_CHANGES`, the Orchestrator routes the findings back to the Implementer.
+7. If review passes, the Tester receives the modified files and acceptance criteria.
+8. If tests fail, the Orchestrator routes the failure information back to the Implementer.
+9. If review and tests pass, a human must approve the result.
+10. Only after human approval may the Project Manager update the final ticket status.
 
-- `read_entry` and `list_entries` are granted widely, but they are read-only, project-scoped operations.
-- `write_entry` appears on four roles, but writes are schema-bound, classification-limited, project-scoped, and audited.
-- `update_entry` appears only on the Implementer.
-- `delete_entry` appears on no role.
+## Important Tool Boundary
 
-Alternative considered: granting the Implementer `delete_entry` for scratch cleanup. Ruled out because cleanup is not worth giving a coding role a destructive capability. If cleanup becomes necessary, introduce a dedicated maintenance role with explicit review.
+The Reviewer is intentionally denied `mcp__coursetools__file_write`.
 
-## Retrieval operation grants
+This prevents the Reviewer from changing the same code it is responsible for independently evaluating. This boundary reduces the risk that review findings could be hidden by unauthorized edits.
 
-The retrieval server exposes one operation, `mcp__retrieval__retrieve`. A grant has two parts: operation access and the classification ceiling pinned to the role.
+## Alternative Considered
 
-| Role | Retrieval operation granted | Retrieval ceiling | Retrieval denied (reason) |
-| :--- | :--- | :--- | :--- |
-| `planner` | `retrieve` | `internal` | none |
-| `implementer` | `retrieve` | `internal` | none |
-| `reviewer` | `retrieve` | `internal` | none |
-| `tester` | none | n/a | `retrieve` — works from supplied acceptance criteria; does not search the reference corpus. |
-| `project-manager` | none | n/a | `retrieve` — owns the ticket tool and does not perform reference lookups. |
-
-Cross-role check:
-
-- `retrieve` appears on three roles, which is acceptable because it is read-only, project-scoped, capped at the role's ceiling, and returns citations.
-- No role receives a ceiling above `internal`; confidential reference documents remain out of reach by default.
-
-Alternative considered: granting the Tester `retrieve`. Ruled out because the Tester receives acceptance criteria in its task brief and records results against them. An independent corpus search adds a capability the role does not require.
-
-Alternative considered: raising the Reviewer ceiling to `confidential` for cost reviews. Ruled out because no review task in this workflow needs cost figures; the confidential cost document stays out of reach unless a specific task justifies an exception.
+The Reviewer could have been granted `file_write` so it could immediately fix small issues. This was rejected because combining review and implementation responsibilities would weaken independent verification and make failures harder to diagnose.

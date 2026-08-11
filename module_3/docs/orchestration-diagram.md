@@ -1,43 +1,53 @@
-# Orchestration Diagram - CSV Export Workflow
+# Orchestration Diagram - Product Review Feature
 
-This file uses Mermaid because GitHub and GitLab can render Mermaid diagrams directly inside Markdown.
+Target Codebase: Art & Craft Marketplace
+
+This workflow coordinates specialized agents for adding a Product Review feature.
 
 ```mermaid
 graph TD
-    P[Parent / Orchestrator<br/>Sequences work, evaluates outputs, and decides when to loop, skip, or escalate]
-    PL[Planner<br/>Produces an ordered plan and file list]
-    IM[Implementer<br/>Writes code according to the plan]
-    RV[Reviewer<br/>Read-only review of proposed changes]
-    TS[Tester<br/>Runs tests and reports pass/fail]
-    PM[Project Manager<br/>Updates the ticket status]
-    RS[Researcher<br/>Optional stretch: answers external documentation questions]
+    O[Orchestrator<br/>Coordinates work and evaluates results]
+    P[Planner<br/>Creates implementation plan]
+    I[Implementer<br/>Implements approved plan]
+    R[Reviewer<br/>Reviews changes without editing]
+    T[Tester<br/>Runs tests and reports PASS or FAIL]
+    H[Human Approval<br/>Reviews final result]
+    PM[Project Manager<br/>Updates final status]
 
-    P -->|Feature request + repo path| PL
-    PL -->|Plan document + file list| P
+    O -->|Feature request + repo path + acceptance criteria| P
+    P -->|Numbered plan + file list + open questions| O
 
-    P -->|Plan + file list| IM
-    IM -->|Modified files| P
+    O -->|Approved plan + file list| I
+    I -->|Modified files + implementation summary| O
 
-    P -->|Modified files| RV
-    RV -->|Review report| P
+    O -->|Requirements + modified files + summary| R
+    R -->|PASS or NEEDS_CHANGES + findings| O
 
-    P -->|Modified files| TS
-    TS -->|Test results| P
+    O -->|If NEEDS_CHANGES: review findings| I
 
-    P -->|Assembled run summary| PM
-    PM -->|Ticket update confirmation| P
+    O -->|If review passes: modified files + acceptance criteria| T
+    T -->|PASS or FAIL test report| O
 
-    IM -->|Research blocker, if needed| P
-    P -->|Single research question| RS
-    RS -->|Findings document| P
-    P -->|Findings as added input| IM
+    O -->|If tests fail: test findings| I
+
+    O -->|If review and tests pass| H
+    H -->|Approved| O
+    H -->|Rejected with feedback| O
+
+    O -->|Only after human approval: final run summary| PM
+    PM -->|Status update confirmation| O
 ```
 
-## Handoff summary
+## Handoff and Evaluation Rules
 
-1. The parent invokes the `planner` with the feature request and repository path.
-2. The parent sends the resulting plan and file list to the `implementer`.
-3. The parent sends modified files to the `reviewer`.
-4. The parent sends modified files to the `tester`.
-5. The parent sends the assembled run summary to the `project-manager`.
-6. In the optional stretch flow, the parent invokes the `researcher` only when another role raises an external-documentation blocker.
+1. The Orchestrator sends the feature request, repository path, and acceptance criteria to the Planner.
+2. The Planner returns a numbered plan, expected file list, and any open questions.
+3. The Orchestrator checks that the plan is complete and within scope before implementation.
+4. The Implementer receives the approved plan and returns modified files plus an implementation summary.
+5. The Reviewer checks the changes without editing files.
+6. If the Reviewer returns NEEDS_CHANGES, the Orchestrator sends the findings back to the Implementer.
+7. If review passes, the Tester runs the approved test suite.
+8. If tests fail, the Orchestrator sends the failure information back to the Implementer.
+9. Human approval is required after review and tests pass.
+10. The Project Manager may update final status only after human approval.
+

@@ -1,0 +1,3 @@
+{"timestamp": "2026-08-14T17:14:54.438028+00:00", "operation": "read_entry", "project_id": "default", "entry_id": "postmortem-lessons.md", "classification": "internal", "calling_role": "planner"}
+{"timestamp": "2026-08-14T17:14:54.438125+00:00", "operation": "read_entry", "project_id": "default", "entry_id": "incident-report-2024-q3.md", "classification": "internal", "calling_role": "planner"}
+{"timestamp": "2026-08-14T17:15:04.395280+00:00", "operation": "write_entry", "project_id": "default", "entry_id": "ff985de5-bf82-46a1-a471-4bd225f6ab62", "classification": "internal", "calling_role": "implementer"}

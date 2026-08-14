@@ -1,64 +1,54 @@
 # Calibration Log
 
-Each entry captures the failure mode, the check that caught it, the result before the fix, the root-cause hypothesis, the fix layer and specific change, and the result after.
+## 2026-08-14: Retrieval miss
 
-### [Date]: [Failure mode]
+- **Failure mode:** Retrieval miss
+- **Check that caught it:** `similarity_floor` (deterministic)
+- **Before:** FAIL. The harness reported 6 vector results below the 0.65 similarity floor. The development run passed 13/14 deterministic checks.
+- **Root-cause hypothesis:** The simulated retrieval tool returned a vector result with similarity 0.60, below the required 0.65 floor, without using a fallback.
+- **Fix layer:** Tool / retrieval behavior
+- **Fix applied:** In `eval/orchestrator.py`, restored the intentionally weakened simulated retrieval similarity value from 0.60 to its original 0.74. The 0.65 evaluation threshold itself was not changed.
+- **After:** PASS. The same development workflow passed 14/14 deterministic checks, including `similarity_floor`.
+- **Before-fix evidence:** `.eval-artifacts/calibration/before-fix/dev-retrieval-fault.json` and matching `.log`
+- **After-fix evidence:** `.eval-artifacts/calibration/after-fix/dev-retrieval-fault.json` and matching `.log`
 
-- **Failure mode:** [name]
-- **Check that caught it:** [check name] (deterministic or rubric)
-- **Before:** FAIL. [what the check reported]
-- **Root-cause hypothesis:** [why the run produced this result]
-- **Fix layer:** [routing / prompt / scope / tool]
-- **Fix applied:** [file and what changed]; commit [SHA]
-- **After:** PASS. [what the check reports now]
+## Regression Check
 
-### 2026-06-01: Context bleed
+- **Previously passing baseline:** `RUN-20260814-113855.json`, previously verified at 14/14 deterministic checks.
+- **Regression run:** `.eval-artifacts/calibration/regression/regression-default-task.json`
+- **Result:** PASS, 14/14 deterministic checks.
+- **Conclusion:** The targeted retrieval correction did not introduce a deterministic regression in the checked development workflow.
+- **Limitation:** Older development transcripts without matching audit `.log` files could not be fully re-evaluated with the current deterministic harness.
 
-- **Failure mode:** Context bleed
-- **Check that caught it:** context_bleed (deterministic)
-- **Before:** FAIL. planted marker leaked into reviewer and tester
-- **Root-cause hypothesis:** The handoff template passed the full prior session instead of a scoped result, so downstream subagents saw upstream history.
-- **Fix layer:** Scope (handoff content)
-- **Fix applied:** orchestrator handoff template now strips session history and passes only the scoped result fields; commit a1b2c3d
-- **After:** PASS. marker no longer leaks past its origin subagent
+## Clean Holdout Measurement: 2026-08-14
 
-## Calibration Summary: [Date]
+The locked six-task holdout set was run without tuning between tasks.
 
-**Holdout set size:** [N] tasks
+- **Holdout set size:** 6 tasks
+- **Deterministic checks:** 84 / 84 passing across all tasks
+- **Rubric suite:** 57 / 96 aggregate
+- **Rubric dimensions passing threshold:** 11 / 24
+- **Tasks passing both layers fully:** 2 / 6
 
-**Deterministic checks:** [M] / [total] passing across all tasks
+### Holdout observations
 
-**Rubric suite:** [aggregate score] / [max], [N] dimension checks passing threshold
+- **HO-01:** Deterministic 14/14. Rubric aggregate 14/16 and all rubric checks passed. Near misses included irrelevant/unused validation-rule reads and a small unsourced recommendation.
+- **HO-02:** Deterministic 14/14, but rubric aggregate 7/16. Agents stalled requesting a project ID and did not perform the requested refactor/review work.
+- **HO-03:** Deterministic 14/14. Rubric aggregate 12/16 passed, but groundedness scored below threshold because the output added unsourced gateway/CI-CD enforcement and API-validation claims.
+- **HO-04:** Deterministic 14/14, including successful canary isolation. Rubric aggregate 6/16. Earlier roles stalled and the Tester incorrectly approved unrelated content.
+- **HO-05:** Deterministic 14/14, but rubric aggregate 8/16. Agents stalled requesting a project ID, so the intended two-reviewer disagreement scenario was not meaningfully exercised.
+- **HO-06:** Deterministic 14/14, but rubric aggregate 8/16. Agents requested missing input instead of completing and verifying the metadata update.
 
-**Tasks passing both layers fully:** [N] / [total]
+## Remaining Gaps
 
-**Failure modes surfaced and addressed:**
+The clean holdout run shows a gap between structural compliance and task quality. All deterministic checks passed, but several runs produced incomplete or irrelevant work that the rubric detected. A recurring pattern was agents stalling on missing project identifiers or parameters rather than completing the requested work. HO-04 also showed that a Tester can produce an incorrect approval even when structural checks pass.
 
-| Failure mode | Check that caught it | Fix applied | Before | After |
-|---|---|---|---|---|
-| Context bleed | context_bleed | Strip history in handoff | FAIL | PASS |
-| Routing misfire | required_roles | Fix reviewer condition | FAIL | PASS |
-| Conflicting reviewers | reviewer_conflict | Add resolution policy | FAIL | PASS |
-| Retrieval miss | similarity_floor | Restore threshold, fallback | FAIL | PASS |
-| Schema validation | output_schema | Fix output format spec | FAIL | PASS |
-| Over-broad grant | forbidden_operations | Remove delete grant | FAIL | PASS |
+These gaps were recorded rather than fixed during the clean holdout measurement because the holdout set must remain an unbiased measurement set.
 
-**Remaining gaps:** [Any check still failing after calibration, with a root-cause hypothesis]
+## Near-Miss Patterns for Module 4 Governance
 
-**Near-miss patterns for Module 4 governance:** [Failure modes that were close calls, caught only because a specific condition was present in a holdout task]
-
-### [Date]: Regression from the context-bleed fix
-
-- **Regression of:** correctness on DEV-04 (passed before, failed after history strip)
-- **Cause:** The history-stripping fix removed the Planner's recorded decision, not only the raw session history, so the Implementer lost context it needed.
-- **Fix layer:** Scope (handoff content)
-- **Refinement:** Strip raw session history but retain the scoped result fields; commit [SHA]
-- **After:** PASS. DEV-04 correctness restored; the context_bleed check still passes
-
-### [Date]: Stretch, routing rule from holdout outcomes
-
-- **Teacher signal:** analyze_routing reported skipped:reviewer on 4 of 8 holdout runs
-- **Student update:** orchestrator now invokes the Reviewer for every implementation output, not only on detected syntax errors; commit [SHA]
-- **Holdout before:** [M] / [total] checks; aggregate [score]
-- **Holdout after:** [M'] / [total] checks; aggregate [score']
-- **Caveat:** derived from holdout outcomes; see honest-accounting note below
+- Deterministic success alone does not guarantee useful task completion.
+- Repeated clarification loops can satisfy routing and schema checks while producing poor outcomes.
+- Groundedness needs continued monitoring because plausible but unsupported claims appeared in HO-01 and HO-03.
+- Context isolation worked in HO-04, but downstream semantic correctness still failed.
+- Reviewer-conflict logic can pass structurally without meaningfully exercising disagreement when reviewers stall before producing substantive verdicts.

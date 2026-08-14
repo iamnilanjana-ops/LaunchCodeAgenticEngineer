@@ -60,7 +60,7 @@ def build_judge_prompt(dimension, transcript_text):
         "definition below, then score the output from 1 to 4 using the level "
         "descriptions. Return only a JSON object with the fields "
         '"dimension", "score" (an integer from 1 to 4), and "justification" '
-        "(one or two sentences). Return nothing else.\n\n"
+        "(maximum 15 words). Return nothing else.\n\n"
         f"DIMENSION: {dimension['name']}\n"
         f"WHAT IT MEASURES: {dimension['description']}\n"
         f"LEVELS:\n{json.dumps(dimension['levels'], indent=2)}\n\n"

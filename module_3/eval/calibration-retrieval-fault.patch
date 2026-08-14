@@ -1,0 +1,6 @@
+diff --git a/module_3/eval/orchestrator.py b/module_3/eval/orchestrator.py
+--- a/module_3/eval/orchestrator.py
++++ b/module_3/eval/orchestrator.py
+@@
+-                "similarity": 0.74,
++                "similarity": 0.60,

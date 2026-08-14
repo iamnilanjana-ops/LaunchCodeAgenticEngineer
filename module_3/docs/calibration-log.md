@@ -2,6 +2,8 @@
 
 ## 2026-08-14: Retrieval miss
 
+- **Development task used:** "Update the project decision record after changing the API validation rule. Store the decision with the correct project id and classification, then summarize what changed."
+
 - **Failure mode:** Retrieval miss
 - **Check that caught it:** `similarity_floor` (deterministic)
 - **Before:** FAIL. The harness reported 6 vector results below the 0.65 similarity floor. The development run passed 13/14 deterministic checks.
@@ -52,3 +54,4 @@ These gaps were recorded rather than fixed during the clean holdout measurement 
 - Groundedness needs continued monitoring because plausible but unsupported claims appeared in HO-01 and HO-03.
 - Context isolation worked in HO-04, but downstream semantic correctness still failed.
 - Reviewer-conflict logic can pass structurally without meaningfully exercising disagreement when reviewers stall before producing substantive verdicts.
+
